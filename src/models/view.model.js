@@ -1,18 +1,18 @@
 import mongoose from 'mongoose';
 
-const tweetSchema = new mongoose.Schema(
+const viewSchema = new mongoose.Schema(
     {
-        owner: {
+        viewer: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-        },
-        content: {
-            type: String,
-            required: true,
         },
         video: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Video',
+        },
+        watchDuration: {
+            type: Number,
+            default: 0,
         },
     },
     {
@@ -20,4 +20,4 @@ const tweetSchema = new mongoose.Schema(
     },
 );
 
-export const Tweet = mongoose.model('Tweet', tweetSchema);
+export const View = mongoose.model('View', viewSchema);
