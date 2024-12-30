@@ -7,7 +7,6 @@ import {
     getUserChannelProfile,
     getUserData,
     getUsers,
-    getUsersProfile,
     getUserWatchHistory,
     loginUser,
     logoutUser,
@@ -20,7 +19,6 @@ import {
 } from '../controllers/user.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
 import { verifyJwt } from '../middlewares/auth.middleware.js';
-import { getAllUsers, getAllUsersProfile } from '../services/user.service.js';
 const app = express.Router();
 
 app.route('/register').post(

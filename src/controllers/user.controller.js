@@ -4,7 +4,6 @@ import {
     deleteUserById,
     findUser,
     getAllUsers,
-    getAllUsersProfile,
     getUserProfile,
     updateUserById,
 } from '../services/user.service.js';
