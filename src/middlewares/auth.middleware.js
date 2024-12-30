@@ -1,7 +1,7 @@
-import { accessTokenSecret, ROLES } from '../constants';
-import { findUser } from '../services/user.service';
-import { ApiError } from '../utils/ApiError';
-import { asyncHandler } from '../utils/asyncHandler';
+import { accessTokenSecret, ROLES } from '../constants.js';
+import { findUser } from '../services/user.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import jwt from 'jsonwebtoken';
 
 export const verifyJwt = asyncHandler(async (req, res, next) => {

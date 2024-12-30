@@ -1,4 +1,4 @@
-import { Video } from '../models/video.model';
+import { Video } from '../models/video.model.js';
 
 export const findVideo = async (data) => {
     try {

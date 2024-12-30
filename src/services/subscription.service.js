@@ -1,4 +1,4 @@
-import { Subscription } from '../models/subscription.model';
+import { Subscription } from '../models/subscription.model.js';
 
 export const findSubscription = async (data) => {
     try {

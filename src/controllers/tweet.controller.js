@@ -1,7 +1,7 @@
-import { createTweetData, deleteTweetData } from '../services/tweet.service';
-import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/asyncHandler';
+import { createTweetData, deleteTweetData, updateTweetData } from '../services/tweet.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createTweet = asyncHandler(async (req, res) => {
     try {

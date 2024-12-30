@@ -12,6 +12,11 @@ export const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRY;
 export const refreshTokenSecret = process.env.REFRESH_TOKEN_SECRET;
 export const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY;
 
+export const cookieOptions = {
+    httpOnly: true,
+    secure: true,
+};
+
 export const ROLES = {
     ADMIN: 'admin',
     USER: 'user',

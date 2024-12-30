@@ -2,11 +2,11 @@ import {
     createCommentData,
     deleteCommentData,
     updateCommentData,
-} from '../services/comment.service';
-import { findVideo } from '../services/video.service';
-import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/asyncHandler';
+} from '../services/comment.service.js';
+import { findVideo } from '../services/video.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createComment = asyncHandler(async (req, res) => {
     try {

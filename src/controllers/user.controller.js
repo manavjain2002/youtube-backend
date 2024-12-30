@@ -1,34 +1,29 @@
-import { refreshTokenSecret, ROLES } from '../constants';
-import { User } from '../models/user.model';
+import { cookieOptions, refreshTokenSecret, ROLES } from '../constants.js';
 import {
+    createUser,
     deleteUserById,
     findUser,
     getAllUsers,
     getAllUsersProfile,
+    getUserProfile,
     updateUserById,
-} from '../services/user.service';
-import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/asyncHandler';
-import { uploadOnCloudinary } from '../utils/cloudinary';
+} from '../services/user.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
+import { uploadOnCloudinary } from '../utils/cloudinary.js';
 import jwt from 'jsonwebtoken';
-
-const cookieOptions = {
-    httpOnly: true,
-    secure: true,
-};
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
         const user = await findUser({ _id: userId });
 
         const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
 
-        user.save({ validateBeforeSave: false });
-
+        await user.save({ validateBeforeSave: false });
         return {
             accessToken,
             refreshToken,
@@ -119,7 +114,7 @@ export const loginUser = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'User with this email does not exist');
         }
 
-        if (!user?.isCorrectPassword(password)) {
+        if (!(await user?.isCorrectPassword(password))) {
             throw new ApiError(400, 'Invalid credentials');
         }
 
@@ -342,27 +337,35 @@ export const updatePassword = asyncHandler(async (req, res) => {
 
         const user = await findUser({ _id: req.user._id });
 
-        if (!user.isCorrectPassword(oldPassword)) {
+        if (!(await user.isCorrectPassword(oldPassword))) {
             throw new ApiError(400, 'Invalid old password provided');
         }
-
-        const updatedUser = await updateUserById(req.user._id, {
-            password: newPassword,
-        });
+        user.password = newPassword;
+        await user.save({ validateBeforeSave: false });
 
         res.status(200).json(
-            new ApiResponse(
-                200,
-                updatedUser,
-                'User password updated successfully',
-            ),
+            new ApiResponse(200, user, 'User password updated successfully'),
         );
     } catch (error) {
-        throw new ApiError(
-            500,
-            error?.message || 'Unable to update password: ',
-            password,
+        throw new ApiError(500, error?.message || 'Unable to update password');
+    }
+});
+export const getUserData = asyncHandler(async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            throw new ApiError(400, 'Unable to get user data');
+        }
+
+        const user = await findUser({ _id: id });
+        if (!user) {
+            throw new ApiError(400, 'Invalid user id');
+        }
+        res.status(200).json(
+            new ApiResponse(200, user, 'User fetched successfully'),
         );
+    } catch (error) {
+        throw new ApiError(500, error?.message || 'Unable to fetch user');
     }
 });
 
@@ -378,12 +381,13 @@ export const getUser = asyncHandler(async (req, res) => {
 
 export const getUserChannelProfile = asyncHandler(async (req, res) => {
     try {
-        const userId = req.params?.id;
-        if (!userId) {
-            throw new ApiError(400, 'Invalid userId requested');
+        const { id } = req.params;
+
+        if (!id) {
+            throw new ApiError(400, 'Invalid id requested');
         }
 
-        const userProfile = await getUserChannelProfile(userId, false);
+        const userProfile = await getUserProfile(id, false);
         if (!userProfile) {
             throw new ApiError(400, 'Invalid user requested');
         }
@@ -405,7 +409,7 @@ export const getUserChannelProfile = asyncHandler(async (req, res) => {
 
 export const getUserWatchHistory = asyncHandler(async (req, res) => {
     try {
-        const userProfile = await getUserChannelProfile(req.user._id, true);
+        const userProfile = await getUserProfile(req.user._id, true);
         if (!userProfile) {
             throw new ApiError(400, 'Invalid user requested');
         }
@@ -413,7 +417,7 @@ export const getUserWatchHistory = asyncHandler(async (req, res) => {
         res.status(200).json(
             new ApiResponse(
                 200,
-                userProfile,
+                userProfile.watchHistory,
                 'User Profile fetched successfully',
             ),
         );
@@ -439,6 +443,34 @@ export const deleteUser = asyncHandler(async (req, res) => {
         throw new ApiError(
             500,
             error?.message || 'Unable to fetch delete user',
+        );
+    }
+});
+
+export const addToWatchHistory = asyncHandler(async (req, res) => {
+    try {
+        const { videoId } = req.body;
+        if (!videoId) {
+            throw new ApiError(400, 'Video id is required');
+        }
+        const user = await findUser({ _id: req.user._id });
+
+        const userWatchHistory = user.watchHistory;
+
+        user.watchHistory.push(videoId);
+
+        user.save({ validateBeforeSave: false });
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                userWatchHistory,
+                'Watch Histroy cleared successfully',
+            ),
+        );
+    } catch (error) {
+        throw new ApiError(
+            500,
+            error?.message || 'Unable to clear user watch history',
         );
     }
 });
@@ -475,22 +507,5 @@ export const getUsers = asyncHandler(async (req, res) => {
         );
     } catch (error) {
         throw new ApiError(500, error?.message || 'Unable to get all users');
-    }
-});
-
-export const getUsersProfile = asyncHandler(async (req, res) => {
-    try {
-        if (req.user.role !== ROLES.ADMIN) {
-            throw new ApiError(400, 'Only admin can access this endpoint');
-        }
-        const users = await getAllUsersProfile();
-        res.status(200).json(
-            new ApiResponse(200, users, 'Users profile fetched successfully'),
-        );
-    } catch (error) {
-        throw new ApiError(
-            500,
-            error?.message || 'Unable to get all users profile',
-        );
     }
 });

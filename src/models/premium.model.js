@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
-const PlaylistSchema = new mongoose.Schema(
+function getDate(){
+    const today = new Date();
+    today.setMonth(today.getMonth() + 3);
+    return today
+}
+
+
+const PremiumSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +19,7 @@ const PlaylistSchema = new mongoose.Schema(
         },
         closingDate: {
             type: Date,
-            default: new Date().setMonth(new Date().getMonth() + 3).getTime(), // 3 months
+            default: getDate(), // 3 months
         },
         referralCode: {
             type: String,
@@ -27,4 +34,4 @@ const PlaylistSchema = new mongoose.Schema(
     },
 );
 
-export const Playlist = mongoose.model('Playlist', PlaylistSchema);
+export const Premium = mongoose.model('Premium', PremiumSchema);
