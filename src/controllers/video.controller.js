@@ -9,6 +9,7 @@ import {
     getAllVideosData,
     updateVideoById,
 } from '../services/video.service.js';
+import mongoose from 'mongoose';
 
 export const getAllVideos = asyncHandler(async (req, res) => {
     try {
@@ -51,6 +52,7 @@ export const publishAVideo = asyncHandler(async (req, res) => {
         const videoPath = videoLocalPath
             ? await uploadOnCloudinary(videoLocalPath)
             : '';
+
         const thumbnailPath = thumbnailLocalPath
             ? await uploadOnCloudinary(thumbnailLocalPath)
             : '';
@@ -61,7 +63,7 @@ export const publishAVideo = asyncHandler(async (req, res) => {
             owner: req.user._id,
             title,
             description,
-            duration: 0,
+            duration: videoPath?.duration,
         };
 
         const createdVideoData = await createVideo(videoData);
@@ -88,9 +90,12 @@ export const getVideoById = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Video Id is required');
         }
 
-        const video = await findVideo({ _id: videoId });
+        const video = await findVideo({
+            _id: new mongoose.Types.ObjectId(videoId),
+        });
+        
         if (!video) {
-            throw new ApiError('Unable to find video with this id: ', videoId);
+            throw new ApiError(400, 'Unable to find video with this id');
         }
 
         res.status(200).json(
@@ -108,12 +113,14 @@ export const updateVideo = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Video Id is required');
         }
 
-        const videoData = await findVideo({ _id: videoId });
+        const videoData = await findVideo({
+            _id: new mongoose.Types.ObjectId(videoId),
+        });
         if (!videoData) {
             throw new ApiError(400, 'Invalid video id requested');
         }
 
-        if (videoData.owner !== req.user._id) {
+        if (videoData.owner._id.toString() != req.user._id) {
             throw new ApiError(400, 'Only video owner can update');
         }
 
@@ -148,12 +155,14 @@ export const deleteVideo = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Video Id is required');
         }
 
-        const videoData = await findVideo({ _id: videoId });
+        const videoData = await findVideo({
+            _id: new mongoose.Types.ObjectId(videoId),
+        });
         if (!videoData) {
             throw new ApiError(400, 'Invalid video id requested');
         }
 
-        if (videoData.owner !== req.user._id) {
+        if (videoData.owner._id.toString() != req.user._id) {
             throw new ApiError(400, 'Only video owner can delete');
         }
 
@@ -177,12 +186,14 @@ export const togglePublishStatus = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Video Id is required');
         }
 
-        const videoData = await findVideo({ _id: videoId });
+        const videoData = await findVideo({
+            _id: new mongoose.Types.ObjectId(videoId),
+        });
         if (!videoData) {
             throw new ApiError(400, 'Invalid video id requested');
         }
 
-        if (videoData.owner !== req.user._id) {
+        if (videoData.owner._id.toString() != req.user._id) {
             throw new ApiError(
                 400,
                 'Only video owner can toggle publish status',
@@ -208,11 +219,92 @@ export const togglePublishStatus = asyncHandler(async (req, res) => {
     }
 });
 
-export {
-    getAllVideos,
-    publishAVideo,
-    getVideoById,
-    updateVideo,
-    deleteVideo,
-    togglePublishStatus,
-};
+export const updateVideoLink = asyncHandler(async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            throw new ApiError(400, 'Video id is required');
+        }
+        const videoLocalPath = req.file && req.file.path ? req.file.path : '';
+        if (!videoLocalPath) {
+            throw new ApiError(400, 'Video path is required');
+        }
+
+        const videoPath = await uploadOnCloudinary(videoLocalPath);
+
+        if (!videoPath) {
+            throw new ApiError(500, 'Unable to upload the video on cloudinary');
+        }
+
+        const videoData = await findVideo({
+            _id: new mongoose.Types.ObjectId(id),
+        });
+
+        if (videoData.owner._id.toString() != req.user._id) {
+            throw new ApiError(400, 'Video owner can change the video');
+        }
+
+        const updatedVideo = await updateVideoById(id, {
+            video: videoPath.url,
+            duration: videoPath.duration,
+        });
+
+        if (!updatedVideo) {
+            throw new ApiError(500, 'Unable to update video');
+        }
+
+        res.status(200).json(
+            new ApiResponse(200, updatedVideo, 'Video updated successfully'),
+        );
+    } catch (error) {
+        throw new ApiError(500, error?.message || 'Unable to update video');
+    }
+});
+
+export const updateThumbnailLink = asyncHandler(async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            throw new ApiError(400, 'Thumbnail id is required');
+        }
+        const thumbnailLocalPath =
+            req.file && req.file.path ? req.file.path : '';
+        if (!thumbnailLocalPath) {
+            throw new ApiError(400, 'Thumbnail path is required');
+        }
+
+        const thumbnailPath = await uploadOnCloudinary(thumbnailLocalPath);
+
+        if (!thumbnailPath) {
+            throw new ApiError(
+                500,
+                'Unable to upload the thumbnail on cloudinary',
+            );
+        }
+
+        const thumbnailData = await findVideo({
+            _id: new mongoose.Types.ObjectId(id),
+        });
+        if (thumbnailData.owner._id.toString() != req.user._id) {
+            throw new ApiError(400, 'Thumbnail owner can change the thumbnail');
+        }
+
+        const updatedThumbnail = await updateVideoById(id, {
+            thumbnail: thumbnailPath.url,
+        });
+
+        if (!updatedThumbnail) {
+            throw new ApiError(500, 'Unable to update thumbnail');
+        }
+
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                updatedThumbnail,
+                'Thumbnail updated successfully',
+            ),
+        );
+    } catch (error) {
+        throw new ApiError(500, 'Unable to update thumbnail');
+    }
+});

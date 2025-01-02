@@ -19,6 +19,7 @@ export const findVideo = async (data) => {
                                 avatar: 1,
                             },
                         },
+                        
                     ],
                 },
             },
@@ -56,6 +57,9 @@ export const findVideo = async (data) => {
             },
             {
                 $addFields: {
+                    owner: {
+                        $first: '$owner'
+                    },
                     likesCount: {
                         $size: '$likes',
                     },
