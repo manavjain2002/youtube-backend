@@ -2,7 +2,7 @@ import { View } from '../models/view.model.js';
 
 export const findView = async (data) => {
     try {
-        const view = await View.findOne(data);
+        const view = await View.find(data);
         return view;
     } catch (error) {
         console.error('Error white fetching view by data ', data, ' :', error);
@@ -11,7 +11,7 @@ export const findView = async (data) => {
 };
 
 
-export const updateView = async (viewer, video, watchDuration) => {
+export const updateViewData = async (viewer, video, watchDuration) => {
     try {
         const viewData = await findView({
             viewer,
