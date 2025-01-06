@@ -73,7 +73,7 @@ export const updateTweet = asyncHandler(async (req, res) => {
 
 export const deleteTweet = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }
@@ -118,7 +118,7 @@ export const deleteTweet = asyncHandler(async (req, res) => {
 
 export const getUserTweet = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }

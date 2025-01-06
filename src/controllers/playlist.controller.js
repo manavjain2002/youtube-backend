@@ -3,6 +3,7 @@ import {
     createPlaylistData,
     deletePlaylistData,
     findPlaylistData,
+    removeVideoDataFromPlaylist,
 } from '../services/playlist.service.js';
 import { findUser } from '../services/user.service.js';
 import { ApiError } from '../utils/ApiError.js';
@@ -34,13 +35,51 @@ export const createPlaylist = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 createdData,
-                'Playlist data created successfully.',
-            ),
+                'Playlist data created successfully.'
+            )
         );
     } catch (error) {
         throw new ApiError(
             500,
-            error?.message || 'Unable to create playlist data',
+            error?.message || 'Unable to create playlist data'
+        );
+    }
+});
+
+export const removeVideoFromPlaylist = asyncHandler(async (req, res) => {
+    try {
+        const { playlistId } = req.body;
+
+        if (!playlistId) {
+            throw new ApiError(400, 'Playlist Id is required');
+        }
+
+        const {videos} = req.body;
+        if (!videos || videos.length == 0) {
+            throw new ApiError(400, 'Videos are required');
+        }
+
+        const playlistData = await findPlaylistData(playlistId);
+        if(!playlistData){
+            throw new ApiError(400, `Unable to fetch playlist`)
+        }
+
+        const updatedData = await removeVideoDataFromPlaylist(playlistId, videos);
+        if(!updatedData){
+            throw new ApiError(400, 'Unable to remove videos')
+        }
+
+        res.status(200).json(
+            new ApiResponse(
+                200,
+                updatedData,
+                'Playlist data created successfully.'
+            )
+        );
+    } catch (error) {
+        throw new ApiError(
+            500,
+            error?.message || 'Unable to create playlist data'
         );
     }
 });
@@ -53,7 +92,7 @@ export const deletePlaylist = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Playlist Id is required');
         }
 
-        const playlistData = await findPlaylist({ _id: playlistId });
+        const playlistData = await findPlaylistData({ _id: playlistId });
         if (!playlistData) {
             throw new ApiError(400, 'Invalid playlist id requested');
         }
@@ -66,7 +105,7 @@ export const deletePlaylist = asyncHandler(async (req, res) => {
         ) {
             throw new ApiError(
                 400,
-                'Only playlist creator or admin can delete the playlist',
+                'Only playlist creator or admin can delete the playlist'
             );
         }
 
@@ -80,13 +119,13 @@ export const deletePlaylist = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 deletedData,
-                'Playlist data deleted successfully.',
-            ),
+                'Playlist data deleted successfully.'
+            )
         );
     } catch (error) {
         throw new ApiError(
             500,
-            error?.message || 'Unable to delete playlist data',
+            error?.message || 'Unable to delete playlist data'
         );
     }
 });
@@ -108,13 +147,13 @@ export const getPlaylist = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 playlistData,
-                'Playlist data fetched successfully.',
-            ),
+                'Playlist data fetched successfully.'
+            )
         );
     } catch (error) {
         throw new ApiError(
             500,
-            error?.message || 'Unable to fetch playlist data',
+            error?.message || 'Unable to fetch playlist data'
         );
     }
 });

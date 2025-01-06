@@ -77,7 +77,7 @@ export const updateComment = asyncHandler(async (req, res) => {
 
 export const deleteComment = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }
@@ -122,7 +122,7 @@ export const deleteComment = asyncHandler(async (req, res) => {
 
 export const getUserComment = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }
@@ -142,7 +142,7 @@ export const getUserComment = asyncHandler(async (req, res) => {
 
 export const getAllComments = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }

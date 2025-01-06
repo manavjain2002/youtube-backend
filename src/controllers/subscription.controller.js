@@ -4,7 +4,7 @@ import { asyncHandler } from '../utils/asyncHandler';
 
 export const createSubscription = asyncHandler(async (req, res) => {
     try {
-        const { channelId } = req.body;
+        const { channelId } = req.params;
         if (!channelId) {
             throw new ApiError(400, 'Channel is required');
         }

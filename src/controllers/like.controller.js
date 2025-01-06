@@ -73,7 +73,7 @@ export const deleteLike = asyncHandler(async (req, res) => {
 
 export const isLikedVideo = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }
@@ -97,7 +97,7 @@ export const isLikedVideo = asyncHandler(async (req, res) => {
 
 export const getAllLikes = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.body;
+        const { videoId } = req.params;
         if (!videoId) {
             throw new ApiError(400, 'Video Id is required');
         }
