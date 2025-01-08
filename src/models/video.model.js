@@ -43,6 +43,7 @@ const videoSchema = new mongoose.Schema(
 );
 
 videoSchema.post('findById', async function (doc) {
+
     if (doc) {
         const views = await View.find({ video: doc._id });
         console.log(`Deleted views for video: ${doc._id}`);
@@ -67,6 +68,7 @@ videoSchema.post('findById', async function (doc) {
 });
 
 videoSchema.post('findByIdAndDelete', async function (doc) {
+
     if (doc) {
         await View.deleteMany({ video: doc._id });
         console.log(`Deleted views for video: ${doc._id}`);

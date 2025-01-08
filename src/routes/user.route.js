@@ -41,9 +41,9 @@ app.route('/watchHistory')
     .post(verifyJwt, addToWatchHistory)
     .delete(verifyJwt, clearWatchHistory);
 
-app.route('/getAllUsers').get(verifyJwt, getUsers);
+    app.route('/getAllUsers').get(verifyJwt, getUsers);
+    app.route('/:id').patch(verifyJwt, updateUser).get(getUserData);
 
-app.route('/:id').patch(verifyJwt, updateUser).get(getUserData);
 
 app.route('/channel/:id').get(verifyJwt, getUserChannelProfile);
 

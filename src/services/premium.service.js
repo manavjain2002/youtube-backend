@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { Premium } from '../models/premium.model.js';
+import { ApiError } from '../utils/ApiError.js';
 
 export const createPremiumData = async (premiumDataToCreate) => {
     try {
@@ -29,7 +30,7 @@ export const findLatestPremiumData = async (userId) => {
             },
             {
                 $sort: {
-                    closingDate: 'asc',
+                    closingDate: 1,
                 },
             },
         ]);
@@ -38,6 +39,8 @@ export const findLatestPremiumData = async (userId) => {
             return null;
         }
 
-        return data[0][0];
-    } catch (error) {}
+        return data[0];
+    } catch (error) {
+        throw new ApiError(500, error?.message || 'Unable to fetch latest Premium data')        
+    }
 };

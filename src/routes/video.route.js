@@ -11,7 +11,9 @@ import {
     updateVideoLink,
 } from '../controllers/video.controller.js';
 import { upload } from '../middlewares/multer.middleware.js';
-import { getAllVideoViews } from '../controllers/view.controller.js';
+import { getAllVideoLikes, getAllVideoViews } from '../controllers/view.controller.js';
+import { getAllComments } from '../controllers/comment.controller.js';
+import { getAllTweets } from '../controllers/tweet.controller.js';
 
 const app = express.Router();
 
@@ -31,6 +33,7 @@ app.route('/video/:id').post(
     verifyJwt,
     updateVideoLink,
 );
+
 app.route('/thumbnail/:id').post(
     upload.single('thumbnail'),
     verifyJwt,
@@ -45,5 +48,11 @@ app.route('/:videoId')
 app.route('/toggle/:videoId').post(verifyJwt, togglePublishStatus);
 
 app.route('/views/:videoId').get(verifyJwt, getAllVideoViews);
+
+app.route('/likes/:videoId').get(verifyJwt, getAllVideoLikes);
+
+app.route('/comments/:videoId').get(verifyJwt, getAllComments);
+
+app.route('/tweets/:videoId').get(verifyJwt, getAllTweets);
 
 export default app;

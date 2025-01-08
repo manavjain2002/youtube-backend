@@ -19,7 +19,6 @@ export const findVideo = async (data) => {
                                 avatar: 1,
                             },
                         },
-                        
                     ],
                 },
             },
@@ -58,7 +57,7 @@ export const findVideo = async (data) => {
             {
                 $addFields: {
                     owner: {
-                        $first: '$owner'
+                        $first: '$owner',
                     },
                     likesCount: {
                         $size: '$likes',
@@ -152,32 +151,44 @@ export const deleteVideoById = async (id) => {
 };
 
 export const getAllVideosData = async (
-    page = 1,
+    page = 0,
     limit = 10,
     query,
     sortBy,
     sortType,
 ) => {
     try {
-        const sortCriteria = {};
-        sortCriteria[sortBy] = sortType;
-
-        const videos = await Video.aggregate([
+        const queryData = [
             {
-                $match: query,
-                $limit: limit,
-                $skip: page * limit,
-                $sort: sortCriteria,
+                $limit: parseInt(limit),
             },
-            {},
-        ]);
+            {
+                $skip: parseInt(page) * parseInt(limit),
+            },
+        ];
+
+        if (sortBy && sortType) {
+            const sortCriteria = {};
+            sortCriteria[sortBy] = sortType;
+            queryData.push({
+                $sort: sortCriteria,
+            });
+        }
+
+        if (query) {
+            queryData.push({
+                $match: query,
+            });
+        }
+
+        const videos = await Video.aggregate(queryData);
 
         if (videos.length > 0) {
-            return videos[0];
+            return videos;
         }
 
         return null;
     } catch (error) {
-        console.error('Error while getting all videos');
+        console.error('Error while getting all videos', error?.message);
     }
 };

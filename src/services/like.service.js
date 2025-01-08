@@ -1,8 +1,8 @@
 import { Like } from '../models/like.model.js';
 
-export const findLike = async (data) => {
+export const findLikes = async (data) => {
     try {
-        const like = await Like.findOne(data);
+        const like = await Like.find(data);
         return like;
     } catch (error) {
         console.error('Error white fetching like by data ', data, ' :', error);
@@ -10,7 +10,7 @@ export const findLike = async (data) => {
     }
 };
 
-export const createLike = async (likeData) => {
+export const createLikes = async (likeData) => {
     try {
         const data = await Like.create(likeData);
         return data;
@@ -19,7 +19,7 @@ export const createLike = async (likeData) => {
     }
 };
 
-export const deleteLike = async (id) => {
+export const deleteLikes = async (id) => {
     try {
         const like = await Like.findByIdAndDelete(id);
         return like;

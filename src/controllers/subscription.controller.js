@@ -1,6 +1,7 @@
-import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/asyncHandler';
+import { createSubscriptions, deleteSubscriptions, findSubscriptions } from '../services/subscription.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createSubscription = asyncHandler(async (req, res) => {
     try {
@@ -14,7 +15,7 @@ export const createSubscription = asyncHandler(async (req, res) => {
             subscriber: req.user._id,
         });
 
-        if (alreadySubscribed) {
+        if (alreadySubscribed && alreadySubscribed.length > 0) {
             throw new ApiError(400, 'Already subscribed');
         }
 
@@ -23,7 +24,7 @@ export const createSubscription = asyncHandler(async (req, res) => {
             subscriber: req.user._id,
         };
 
-        const data = await createSubscription(subscribeData);
+        const data = await createSubscriptions(subscribeData);
 
         if (!data) {
             throw new ApiError(400, 'Unable to create subscription');
@@ -33,13 +34,13 @@ export const createSubscription = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Subscription created successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to create subscriptions');
+        throw new ApiError(400, error?.message || 'Unable to create subscriptions');
     }
 });
 
 export const deleteSubscription = asyncHandler(async (req, res) => {
     try {
-        const { channelId } = req.body;
+        const { channelId } = req.params;
         if (!channelId) {
             throw new ApiError(400, 'Channel Id is required');
         }
@@ -49,18 +50,18 @@ export const deleteSubscription = asyncHandler(async (req, res) => {
             subscriber: req.user._id,
         });
 
-        if (!subscriptionData) {
-            throw new ApiError(400, 'Not subscriptiond');
+        if (!subscriptionData || subscriptionData.length == 0) {
+            throw new ApiError(400, 'Not subscriptions');
         }
 
-        if (subscriptionData.subscriber !== req.user._id) {
+        if (subscriptionData[0].subscriber.toString() != req.user._id.toString()) {
             throw new ApiError(
                 400,
                 'Only subscriber can delete the subscription',
             );
         }
 
-        const data = await deleteSubscription(subscriptionData._id);
+        const data = await deleteSubscriptions(subscriptionData[0]._id);
 
         if (!data) {
             throw new ApiError(400, 'Unable to delete subscription');
@@ -70,13 +71,13 @@ export const deleteSubscription = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Subscription deleted successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to delete subscriptions');
+        throw new ApiError(400, error?.message || 'Unable to delete subscriptions');
     }
 });
 
 export const isSubscribedChannel = asyncHandler(async (req, res) => {
     try {
-        const { channelId } = req.body;
+        const { channelId } = req.params;
         if (!channelId) {
             throw new ApiError(400, 'Channel Id is required');
         }
@@ -89,24 +90,24 @@ export const isSubscribedChannel = asyncHandler(async (req, res) => {
         res.status(200).json(
             new ApiResponse(
                 200,
-                alreadySubscribed ? true : false,
+                alreadySubscribed && alreadySubscribed.length > 0 ? true : false,
                 'Subscription fetched successfully',
             ),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to fetch subscriptions');
+        throw new ApiError(400, error?.message || 'Unable to fetch subscriptions');
     }
 });
 
 export const getAllSubscription = asyncHandler(async (req, res) => {
     try {
-        const { channel } = req.body;
-        if (!channel) {
+        const { channelId } = req.params;
+        if (!channelId) {
             throw new ApiError(400, 'Channel Id is required');
         }
 
         const subscriptions = await findSubscriptions({
-            channel: channel,
+            channel: channelId,
         });
 
         res.status(200).json(
@@ -117,6 +118,6 @@ export const getAllSubscription = asyncHandler(async (req, res) => {
             ),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to fetch subscriptions');
+        throw new ApiError(400, error?.message ||  'Unable to fetch subscriptions');
     }
 });

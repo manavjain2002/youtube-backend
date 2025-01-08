@@ -19,6 +19,25 @@ export const deletePlaylistData = async (playlistId) => {
     }
 };
 
+export const addVideoDataFromPlaylist = async (playlistId, videos) => {
+    try {
+        const updatedPlaylist = await Playlist.findByIdAndUpdate(
+            playlistId,
+            { $push: { videos: videos } }, // Remove all videoIds in the array
+            { new: true } // Return the updated document
+        ); // Populate videos if needed
+
+        // Handle case where playlist is not found
+        if (!updatedPlaylist) {
+            throw new Error('Playlist not found');
+        }
+
+        return updatedPlaylist;
+    } catch (error) {
+        console.error('Error while removing video from playlist data: ', error);
+    }
+};
+
 export const removeVideoDataFromPlaylist = async (playlistId, videos) => {
     try {
         const updatedPlaylist = await Playlist.findByIdAndUpdate(

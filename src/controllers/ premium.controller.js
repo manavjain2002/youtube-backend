@@ -18,12 +18,12 @@ export const createPremium = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Closing Date and Paid amount is required');
         }
 
-        startingDate = startingDate
+        let newStartingDate = startingDate
             ? new Date(startingDate).toISOString()
             : new Date(Date.now()).toISOString;
-        closingDate = new Date(closingDate).toISOString();
+        let newClosingDate = new Date(closingDate).toISOString();
 
-        if (new Date(closingDate) < new Date(Date.now())) {
+        if (new Date(newClosingDate) < new Date(Date.now())) {
             throw new ApiError(
                 400,
                 'Closing date should be more than todays date',
@@ -32,8 +32,8 @@ export const createPremium = asyncHandler(async (req, res) => {
 
         const premiumDataToCreate = {
             user: req.user?._id,
-            startingDate,
-            closingDate,
+            startingDate: newStartingDate,
+            closingDate: newClosingDate,
             referralCode,
             amountPaid,
         };
@@ -69,24 +69,24 @@ export const deletePremium = asyncHandler(async (req, res) => {
             throw new ApiError(400, 'Premium Id is required');
         }
 
-        const premiumData = await findPremium({ _id: premiumId });
+        const premiumData = await findLatestPremiumData(req.user._id);
+
         if (!premiumData) {
             throw new ApiError(400, 'Invalid premium id requested');
         }
 
         const userData = await findUser({ _id: req.user?._id });
-
         if (
-            premiumData.user !== req.user._id &&
-            userData.role !== ROLES.ADMIN
+            premiumData.user.toString() != req.user._id.toString() &&
+            userData.role != ROLES.ADMIN
         ) {
             throw new ApiError(400, 'Only premium user can delete the premium');
         }
 
-        const deletedData = await deletePremiumData({ _id: premiumId });
+        const deletedData = await deletePremiumData(premiumId);
 
         if (!deletedData) {
-            throw new ApiError(400, 'Unable to create premium data ');
+            throw new ApiError(400, 'Unable to delete premium data ');
         }
 
         res.status(200)
@@ -109,20 +109,27 @@ export const deletePremium = asyncHandler(async (req, res) => {
 export const isPremiumUser = asyncHandler(async (req, res) => {
     try {
         const { userId } = req.params;
+        console.log(
+            '🚀 ~ file:  premium.controller.js:123 ~ isPremiumUser ~ userId:',
+            userId,
+        );
 
         if (!userId) {
             throw new ApiError(400, 'User Id is required');
         }
 
-        const premiumData = await findLatestPremiumData({ user: userId });
-        if (!premiumData) {
-            throw new ApiError(400, 'Invalid premium id requested');
-        }
+        const premiumData = await findLatestPremiumData(userId);
+        console.log(
+            '🚀 ~ file:  premium.controller.js:131 ~ isPremiumUser ~ premiumData:',
+            premiumData,
+        );
 
         res.status(200).json(
             new ApiResponse(
                 200,
-                new Date(premiumData?.closingDate) > Date.now(),
+                premiumData
+                    ? new Date(premiumData?.closingDate) > Date.now()
+                    : false,
                 'Premium data fetched successfully.',
             ),
         );

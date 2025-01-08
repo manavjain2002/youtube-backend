@@ -1,3 +1,4 @@
+import { findLikes } from '../services/like.service.js';
 import { findView, updateViewData } from '../services/view.service.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
@@ -67,5 +68,24 @@ export const getAllVideoViews = asyncHandler(async (req, res) => {
         );
     } catch (error) {
         throw new ApiError(400, 'Unable to fetch views');
+    }
+});
+
+export const getAllVideoLikes = asyncHandler(async (req, res) => {
+    try {
+        const { videoId } = req.params;
+        if (!videoId) {
+            throw new ApiError(400, 'Video Id is required');
+        }
+
+        const likes = await findLikes({
+            video: videoId,
+        });
+
+        res.status(200).json(
+            new ApiResponse(200, likes, 'Like fetched successfully'),
+        );
+    } catch (error) {
+        throw new ApiError(400, 'Unable to fetch likes');
     }
 });

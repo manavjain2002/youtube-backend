@@ -1,6 +1,8 @@
+import mongoose from 'mongoose';
 import {
     createCommentData,
     deleteCommentData,
+    findComment,
     updateCommentData,
 } from '../services/comment.service.js';
 import { findVideo } from '../services/video.service.js';
@@ -20,7 +22,7 @@ export const createComment = asyncHandler(async (req, res) => {
             owner: req.user._id,
         });
 
-        if (alreadyCommented) {
+        if (alreadyCommented && alreadyCommented.length > 0) {
             throw new ApiError(400, 'Already commented');
         }
 
@@ -40,28 +42,33 @@ export const createComment = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Comment created successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to create comments');
+        throw new ApiError(400, error?.message || 'Unable to create comments');
     }
 });
 
+
 export const updateComment = asyncHandler(async (req, res) => {
     try {
-        const { commentId, content } = req.body;
-        if (!commentId || !content) {
-            throw new ApiError(400, 'Comment Id and content is required');
+        const {commentId} = req.params
+        if (!commentId) {
+            throw new ApiError(400, 'Comment Id is required');
+        }
+        const { content } = req.body;
+        if (!content) {
+            throw new ApiError(400, 'Content is required');
         }
 
         const commentData = await findComment({ _id: commentId });
 
-        if (!commentData) {
+        if (!commentData || commentData.length == 0) {
             throw new ApiError(400, 'Not commented');
         }
 
-        if (commentData.owner !== req.user._id) {
+        if (commentData[0].owner.toString() != req.user._id) {
             throw new ApiError(400, 'Only owner can update the comment');
         }
 
-        const data = await updateCommentData(commentData._id, { content });
+        const data = await updateCommentData(commentData[0]._id, { content });
 
         if (!data) {
             throw new ApiError(400, 'Unable to update comment');
@@ -71,34 +78,33 @@ export const updateComment = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Comment updated successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to update comments');
+        throw new ApiError(400, error?.message || 'Unable to update comments');
     }
 });
 
 export const deleteComment = asyncHandler(async (req, res) => {
     try {
-        const { videoId } = req.params;
-        if (!videoId) {
+        const { commentId } = req.params;
+        if (!commentId) {
             throw new ApiError(400, 'Video Id is required');
         }
+        
+        const commentData = await findComment({
+            _id: commentId
+        });
 
-        const videoData = await findVideo({ _id: videoId });
+        if (!commentData || commentData.length == 0) {
+            throw new ApiError(400, 'Not commented');
+        }
+
+        const videoData = await findVideo({ _id: new mongoose.Types.ObjectId(commentData[0].video) });
         if (!videoData) {
             throw new ApiError(400, 'Video with this id is not available');
         }
 
-        const commentData = await findComment({
-            video: videoId,
-            owner: req.user._id,
-        });
-
-        if (!commentData) {
-            throw new ApiError(400, 'Not commented');
-        }
-
         if (
-            commentData.owner !== req.user._id &&
-            videoData.owner !== req.user._id
+            commentData[0].owner.toString() != req.user._id &&
+            videoData.owner.toString() != req.user._id
         ) {
             throw new ApiError(
                 400,
@@ -106,7 +112,7 @@ export const deleteComment = asyncHandler(async (req, res) => {
             );
         }
 
-        const data = await deleteCommentData(commentData._id);
+        const data = await deleteCommentData(commentData[0]._id);
 
         if (!data) {
             throw new ApiError(400, 'Unable to delete comment');
@@ -116,9 +122,10 @@ export const deleteComment = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Comment deleted successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to delete comments');
+        throw new ApiError(400, error?.message || 'Unable to delete comments');
     }
 });
+
 
 export const getUserComment = asyncHandler(async (req, res) => {
     try {

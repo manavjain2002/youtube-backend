@@ -1,6 +1,7 @@
-import { ApiError } from '../utils/ApiError';
-import { ApiResponse } from '../utils/ApiResponse';
-import { asyncHandler } from '../utils/asyncHandler';
+import { createLikes, deleteLikes, findLikes } from '../services/like.service.js';
+import { ApiError } from '../utils/ApiError.js';
+import { ApiResponse } from '../utils/ApiResponse.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createLike = asyncHandler(async (req, res) => {
     try {
@@ -14,7 +15,7 @@ export const createLike = asyncHandler(async (req, res) => {
             likedBy: req.user._id,
         });
 
-        if (alreadyLiked) {
+        if (alreadyLiked.length > 0) {
             throw new ApiError(400, 'Already liked');
         }
 
@@ -33,9 +34,11 @@ export const createLike = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Like created successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to create likes');
+        throw new ApiError(400, error?.message || 'Unable to create likes');
     }
 });
+
+
 
 export const deleteLike = asyncHandler(async (req, res) => {
     try {
@@ -49,15 +52,15 @@ export const deleteLike = asyncHandler(async (req, res) => {
             likedBy: req.user._id,
         });
 
-        if (!likeData) {
+        if (!likeData || likeData.length == 0) {
             throw new ApiError(400, 'Not liked');
         }
 
-        if (likeData.owner !== req.user._id) {
+        if (likeData[0].likedBy.toString() != req.user._id) {
             throw new ApiError(400, 'Only like owner can delete the like');
         }
 
-        const data = await deleteLike(likeData._id);
+        const data = await deleteLikes(likeData[0]._id);
 
         if (!data) {
             throw new ApiError(400, 'Unable to delete like');
@@ -67,9 +70,10 @@ export const deleteLike = asyncHandler(async (req, res) => {
             new ApiResponse(200, data, 'Like deleted successfully'),
         );
     } catch (error) {
-        throw new ApiError(400, 'Unable to delete likes');
+        throw new ApiError(400, error?.message || 'Unable to delete likes');
     }
 });
+
 
 export const isLikedVideo = asyncHandler(async (req, res) => {
     try {
@@ -86,7 +90,7 @@ export const isLikedVideo = asyncHandler(async (req, res) => {
         res.status(200).json(
             new ApiResponse(
                 200,
-                alreadyLiked ? true : false,
+                alreadyLiked.length > 0 ? true : false,
                 'Like fetched successfully',
             ),
         );

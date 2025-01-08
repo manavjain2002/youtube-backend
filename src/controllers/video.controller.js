@@ -13,7 +13,7 @@ import mongoose from 'mongoose';
 
 export const getAllVideos = asyncHandler(async (req, res) => {
     try {
-        const { page = 1, limit = 10, query, sortBy, sortType } = req.query;
+        const { page = 0, limit = 10, query, sortBy, sortType } = req.query;
         const videos = await getAllVideosData(
             page,
             limit,
@@ -82,6 +82,8 @@ export const publishAVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, error?.message || 'Unable to create video');
     }
 });
+
+
 
 export const getVideoById = asyncHandler(async (req, res) => {
     try {
@@ -235,11 +237,11 @@ export const updateVideoLink = asyncHandler(async (req, res) => {
         if (!videoPath) {
             throw new ApiError(500, 'Unable to upload the video on cloudinary');
         }
-
+        
         const videoData = await findVideo({
             _id: new mongoose.Types.ObjectId(id),
         });
-
+        
         if (videoData.owner._id.toString() != req.user._id) {
             throw new ApiError(400, 'Video owner can change the video');
         }
@@ -260,6 +262,7 @@ export const updateVideoLink = asyncHandler(async (req, res) => {
         throw new ApiError(500, error?.message || 'Unable to update video');
     }
 });
+
 
 export const updateThumbnailLink = asyncHandler(async (req, res) => {
     try {
